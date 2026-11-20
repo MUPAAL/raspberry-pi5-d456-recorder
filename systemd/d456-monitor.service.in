@@ -1,0 +1,21 @@
+[Unit]
+Description=RealSense D456 recorder watchdog
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+Group=@GROUP@
+WorkingDirectory=@INSTALL_DIR@
+Environment=PYTHONUNBUFFERED=1
+Environment=D456_DATA_ROOT=@DATA_DIR@
+ExecStart=/usr/bin/python3 -u @INSTALL_DIR@/monitor_d456_rgb_recorder.py
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=45
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
+

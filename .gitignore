@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.log
+*.pid
+*.status
+*.tmp
+.venv/
+.idea/
+.vscode/
+farrow_data/
+*_calibration.json
+
