@@ -1,0 +1,112 @@
+# Operation and Maintenance
+
+## Recording Schedule
+
+The main program keeps the D456 pipeline open and begins a 20-second recording at `:00` and `:30` of every minute. The emitter is disabled while waiting and enabled at the recording boundary.
+
+Default settings:
+
+- Arducam: disabled
+- VDA export: disabled
+- Scheduled high-rate clips: disabled
+- D456 saved frame rate: 5 FPS
+- DM output: one file per recording clip
+
+## Autostart Flow
+
+```text
+Raspberry Pi boot
+  -> d456-monitor.service
+  -> monitor_d456_rgb_recorder.py
+  -> D456_pig_recorder.py
+```
+
+systemd starts the watchdog before any graphical desktop login, making it more reliable than a desktop `.config/autostart` entry for a headless recorder.
+
+## Service Control
+
+```bash
+sudo systemctl start d456-monitor.service
+sudo systemctl stop d456-monitor.service
+sudo systemctl restart d456-monitor.service
+systemctl status d456-monitor.service --no-pager
+```
+
+Enable or disable boot startup:
+
+```bash
+sudo systemctl enable d456-monitor.service
+sudo systemctl disable d456-monitor.service
+```
+
+## Logs
+
+Watchdog log:
+
+```bash
+tail -f ~/python_code/monitor_d456_log.txt
+```
+
+Recorder log:
+
+```bash
+tail -f ~/python_code/D456_recorder_output.log
+```
+
+systemd journal:
+
+```bash
+journalctl -u d456-monitor.service -f
+```
+
+## Health Status
+
+```bash
+cat ~/python_code/recorder_camera_health.status
+```
+
+A healthy configuration contains:
+
+```text
+OK arducam_enabled=0 rgb=1 realsense=1
+```
+
+The PID file contains only the current recorder process ID. It is created and removed at runtime and must not be committed to GitHub:
+
+```bash
+cat ~/python_code/D456_rgb_recorder.pid
+```
+
+## Headless Operation
+
+When started by SSH or systemd without a graphical display, the recorder disables its OpenCV preview automatically and continues recording. The watchdog has no full graphical interface; verify operation through logs, the health file, and generated output files.
+
+## Change the Data Directory
+
+For a manual run:
+
+```bash
+D456_DATA_ROOT=/mnt/storage/farrow_data \
+  python3 -u ~/python_code/D456_pig_recorder.py
+```
+
+For background operation, edit the `D456_DATA_ROOT` environment line in `/etc/systemd/system/d456-monitor.service`, then reload and restart the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart d456-monitor.service
+```
+
+## Update the Recorder
+
+Stop the service, pull the new repository version, rerun the installer, and start the service again:
+
+```bash
+sudo systemctl stop d456-monitor.service
+git pull --ff-only
+./scripts/install_recorder.sh
+sudo systemctl start d456-monitor.service
+```
+
+The installer does not delete existing recording data.
+

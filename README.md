@@ -1,18 +1,19 @@
 # Raspberry Pi 5 + RealSense D456 Recorder
 
-面向无显示器 Raspberry Pi 5 的 Intel RealSense D456 定时采集与自动监控项目。
+A headless Intel RealSense D456 recorder and watchdog for Raspberry Pi 5.
 
-## 当前功能
+## Features
 
-- D456 持续连接，每个自然分钟的 `:00` 和 `:30` 开始一次采集。
-- 每次保存 20 秒的 RGB、深度伪彩色视频和红外视频。
-- 在打开发射器前保存一张 IR 快照。
-- 保存相机标定信息和 DM 点云 MAT 数据。
-- 相机卡死或子进程退出时自动重启采集子进程。
-- 主录像程序异常退出时由监控程序重启。
-- 支持无显示器、SSH 和 systemd 后台运行。
+- Keeps the D456 pipeline open continuously.
+- Starts a 20-second capture at `:00` and `:30` of every minute.
+- Saves RGB, colorized depth, and infrared video at 5 FPS.
+- Saves an emitter-OFF infrared snapshot immediately before each recording.
+- Saves camera calibration metadata and DM point-cloud MAT data.
+- Restarts the D456 capture subprocess after a crash or native SDK stall.
+- Restarts the main recorder if it exits unexpectedly.
+- Supports SSH-only and systemd operation without a monitor or desktop login.
 
-本仓库的默认部署配置为：
+The default deployment configuration is:
 
 ```python
 ENABLE_ARDUCAM = False
@@ -20,32 +21,33 @@ ENABLE_HIGH_RATE_CLIPS = False
 RECORD_VDA = False
 ```
 
-`v4l2_sequence_capture.py` 仅在以后重新启用 Arducam 时使用。
+`v4l2_sequence_capture.py` is retained for optional future Arducam support. It is not loaded while `ENABLE_ARDUCAM` is `False`.
 
-## 已测试环境
+## Tested Environment
 
-- Raspberry Pi 5，64 位 Raspberry Pi OS / Debian 13
+- Raspberry Pi 5
+- 64-bit Raspberry Pi OS / Debian 13
 - Python 3.13
-- RealSense D456，USB 3.2
-- librealsense `v2.59.2`，RSUSB 后端
-- D456 固件 `5.16.0.1`：本项目实际采集测试通过
+- Intel RealSense D456 connected through USB 3.2
+- librealsense `v2.59.2`, built with the RSUSB backend
+- D456 firmware `5.16.0.1`, verified with simultaneous depth, color, and infrared capture
 
-librealsense `v2.59.2` 的发布说明推荐 D456 USB 使用固件 `5.17.3.10` 或更新版本。固件更新不是自动安装步骤，升级前应阅读官方说明，并确保相机和树莓派不会断电。
+The librealsense `v2.59.2` release notes recommend D456 USB firmware `5.17.3.10` or later. Firmware updates are deliberately excluded from the automated installer because power or USB interruption during an update can damage the device configuration.
 
-## 快速导航
+## Documentation
 
-1. [完整安装步骤](docs/INSTALL_ZH.md)
-2. [运行、日志与停止](docs/OPERATIONS_ZH.md)
-3. [常见问题排查](docs/TROUBLESHOOTING_ZH.md)
+1. [Installation from a blank SD card](docs/INSTALL.md)
+2. [Operation, logs, and service management](docs/OPERATIONS.md)
+3. [Troubleshooting](docs/TROUBLESHOOTING.md)
 
-克隆仓库：
+## Clone the Repository
 
 ```bash
 git clone https://github.com/Yu-Andy-Wang/raspberry-pi5-d456-recorder.git
 cd raspberry-pi5-d456-recorder
 ```
 
-## 仓库结构
+## Repository Layout
 
 ```text
 src/
@@ -60,39 +62,59 @@ scripts/
 systemd/
   d456-monitor.service.in
 docs/
+  INSTALL.md
+  OPERATIONS.md
+  TROUBLESHOOTING.md
 ```
 
-## 数据目录
+## Data Directory
 
-默认保存到当前用户的：
+Data is saved by default under:
 
 ```text
 ~/Pictures/farrow_data/
 ```
 
-可以通过环境变量覆盖：
+Override the location with:
 
 ```bash
 export D456_DATA_ROOT=/path/to/data
 ```
 
-录像和标定文件可能包含设备序列号与实验数据，默认不会被 Git 跟踪。不要把实际数据目录提交到公共仓库。
+Recordings and calibration files may contain experimental data and camera serial numbers. They are excluded by `.gitignore` and should not be committed to a public repository.
 
-## 重要说明
+## Autostart
 
-- 请将 D456 直接连接到 Raspberry Pi 5 的 USB 3 接口。
-- RealSense Viewer 在 RealVNC Virtual Mode 中可能因缺少 GLX 1.3 无法启动；这不影响无界面的 Python 采集。
-- 首次测试应直接运行主程序。确认录像正常后，再启用监控服务。
-- 监控程序会把主程序输出写入日志，因此后台运行时不会出现完整录像界面。
+The installer creates a systemd service that starts the watchdog at boot:
 
-## 上游资料
+```text
+Raspberry Pi boot
+  -> d456-monitor.service
+  -> monitor_d456_rgb_recorder.py
+  -> D456_pig_recorder.py
+```
 
-- [Raspberry Pi 无显示器安装](https://www.raspberrypi.com/documentation/computers/getting-started.html)
-- [librealsense Linux 安装说明](https://github.com/realsenseai/librealsense/blob/master/doc/installation.md)
-- [librealsense RSUSB 后端说明](https://github.com/realsenseai/librealsense/blob/master/doc/installation_jetson.md)
-- [librealsense v2.59.2](https://github.com/realsenseai/librealsense/releases/tag/v2.59.2)
+The service is installed but not enabled automatically. Complete a manual recording test first, then enable it:
 
-## 许可证
+```bash
+sudo systemctl enable --now d456-monitor.service
+```
+
+## Important Notes
+
+- Connect the D456 directly to a Raspberry Pi 5 USB 3 port with a reliable USB 3 cable.
+- RealSense Viewer may fail with a GLX 1.3 error inside RealVNC Virtual Mode. This does not affect headless Python capture.
+- Test `D456_pig_recorder.py` manually before enabling the watchdog service.
+- The watchdog redirects recorder output to log files; it does not provide a full graphical recording interface.
+
+## Upstream Documentation
+
+- [Raspberry Pi headless setup](https://www.raspberrypi.com/documentation/computers/getting-started.html)
+- [librealsense Linux installation](https://github.com/realsenseai/librealsense/blob/master/doc/installation.md)
+- [librealsense RSUSB backend](https://github.com/realsenseai/librealsense/blob/master/doc/installation_jetson.md)
+- [librealsense v2.59.2 release](https://github.com/realsenseai/librealsense/releases/tag/v2.59.2)
+
+## License
 
 [MIT License](LICENSE)
 
