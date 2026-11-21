@@ -90,6 +90,19 @@ sudo systemctl disable --now d456-monitor.service
 
 After the next graphical login, the terminal and `RealSense Depth` window are displayed. Press `q` in the preview window or `Ctrl+C` in the terminal to stop safely.
 
+For an existing installation, switch modes with:
+
+```bash
+cd ~/raspberry-pi5-d456-recorder
+git pull --ff-only
+sudo systemctl disable --now d456-monitor.service
+bash scripts/enable_preview_autostart.sh
+```
+
+The enable script updates the installed preview launcher without replacing recorder settings. Use `sudo raspi-config` to select desktop boot and desktop automatic login if the windows must appear after power-on without a manual login. This requires Raspberry Pi OS with a desktop environment. Reboot and connect to that desktop to see the terminal and preview. To test immediately, run `bash ~/python_code/run_preview.sh` in a terminal inside the graphical desktop.
+
+Desktop preview mode launches the recorder directly. Its internal camera supervisor remains active, but the separate main-process watchdog is only used in headless service mode.
+
 ## Change the Data Directory
 
 For a manual run:
