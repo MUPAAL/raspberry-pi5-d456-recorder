@@ -58,6 +58,9 @@ scripts/
   build_librealsense.sh
   install_recorder.sh
   uninstall_recorder.sh
+  run_preview.sh
+  enable_preview_autostart.sh
+  disable_preview_autostart.sh
   smoke_test.py
 systemd/
   d456-monitor.service.in
@@ -83,7 +86,7 @@ export D456_DATA_ROOT=/path/to/data
 
 Recordings and calibration files may contain experimental data and camera serial numbers. They are excluded by `.gitignore` and should not be committed to a public repository.
 
-## Autostart
+## Choose a Launch Mode
 
 The installer creates a systemd service that starts the watchdog at boot:
 
@@ -97,6 +100,23 @@ Raspberry Pi boot
 The service is installed but not enabled automatically. Complete a manual recording test first, then enable it:
 
 ```bash
+sudo systemctl enable --now d456-monitor.service
+```
+
+This headless mode is recommended for unattended operation. It does not open a terminal or video preview.
+
+For a visible terminal and `RealSense Depth` preview after graphical login, use desktop autostart instead:
+
+```bash
+chmod +x scripts/enable_preview_autostart.sh scripts/run_preview.sh
+./scripts/enable_preview_autostart.sh
+sudo systemctl disable --now d456-monitor.service
+```
+
+Do not enable both modes at the same time. To switch back:
+
+```bash
+./scripts/disable_preview_autostart.sh
 sudo systemctl enable --now d456-monitor.service
 ```
 

@@ -40,6 +40,13 @@ RealVNC Virtual Mode may not expose the GLX version required by RealSense Viewer
 
 The program disables the D456 emitter while waiting for the next recording boundary, so the depth preview may be almost entirely black. The emitter is enabled during the 20-second recording interval. No preview window is created when the recorder runs as a headless systemd service.
 
+To use the visible preview, enable desktop mode and disable systemd mode:
+
+```bash
+./scripts/enable_preview_autostart.sh
+sudo systemctl disable --now d456-monitor.service
+```
+
 ## `Health status write failed`
 
 Confirm that the installation directory exists and is writable:

@@ -27,6 +27,7 @@ install -m 0644 "$REPO_ROOT/src/monitor_d456_rgb_recorder.py" "$INSTALL_DIR/"
 if [[ -f "$REPO_ROOT/src/v4l2_sequence_capture.py" ]]; then
   install -m 0644 "$REPO_ROOT/src/v4l2_sequence_capture.py" "$INSTALL_DIR/"
 fi
+install -m 0755 "$REPO_ROOT/scripts/run_preview.sh" "$INSTALL_DIR/"
 
 TEMP_SERVICE="$(mktemp)"
 trap 'rm -f "$TEMP_SERVICE"' EXIT

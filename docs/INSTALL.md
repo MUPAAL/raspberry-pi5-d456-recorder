@@ -134,9 +134,13 @@ cat ~/python_code/recorder_camera_health.status
 
 Stop the watchdog with `Ctrl+C` after testing.
 
-## 8. Enable Autostart
+## 8. Choose Autostart Mode
 
-After the manual tests pass, enable and start the systemd service:
+After the manual tests pass, choose one mode. Do not enable both.
+
+### Headless systemd mode
+
+Enable and start the systemd service:
 
 ```bash
 sudo systemctl enable --now d456-monitor.service
@@ -158,6 +162,18 @@ tail -n 100 ~/python_code/D456_recorder_output.log
 ```
 
 The first two commands should report `enabled` and `active`.
+
+### Desktop preview mode
+
+To open a terminal and the `RealSense Depth` preview after graphical login:
+
+```bash
+chmod +x scripts/enable_preview_autostart.sh scripts/run_preview.sh
+./scripts/enable_preview_autostart.sh
+sudo systemctl disable --now d456-monitor.service
+```
+
+Log out and back in, or reboot. The preview launcher refuses to start if the systemd recorder is active.
 
 ## 9. Firmware Compatibility
 

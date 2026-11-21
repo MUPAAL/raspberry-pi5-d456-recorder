@@ -12,7 +12,7 @@ Default settings:
 - D456 saved frame rate: 5 FPS
 - DM output: one file per recording clip
 
-## Autostart Flow
+## Launch Modes
 
 ```text
 Raspberry Pi boot
@@ -21,7 +21,7 @@ Raspberry Pi boot
   -> D456_pig_recorder.py
 ```
 
-systemd starts the watchdog before any graphical desktop login, making it more reliable than a desktop `.config/autostart` entry for a headless recorder.
+The project provides two mutually exclusive modes. Headless systemd mode starts the watchdog before graphical login. Desktop preview mode starts the main recorder after graphical login and keeps the terminal and OpenCV depth window visible. Never enable both modes.
 
 ## Service Control
 
@@ -80,6 +80,15 @@ cat ~/python_code/D456_rgb_recorder.pid
 ## Headless Operation
 
 When started by SSH or systemd without a graphical display, the recorder disables its OpenCV preview automatically and continues recording. The watchdog has no full graphical interface; verify operation through logs, the health file, and generated output files.
+
+## Desktop Preview Operation
+
+```bash
+./scripts/enable_preview_autostart.sh
+sudo systemctl disable --now d456-monitor.service
+```
+
+After the next graphical login, the terminal and `RealSense Depth` window are displayed. Press `q` in the preview window or `Ctrl+C` in the terminal to stop safely.
 
 ## Change the Data Directory
 
