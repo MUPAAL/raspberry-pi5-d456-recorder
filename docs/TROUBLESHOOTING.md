@@ -77,6 +77,7 @@ The first frame, an invalid center pixel, a target that is too close, or glass, 
 - Avoid an unpowered USB hub.
 - Run `rs-enumerate-devices` and confirm that `Usb Type Descriptor` is 3.x.
 - Check Raspberry Pi power delivery and cooling.
+- Confirm `usb_max_current_enable=1` is in `/boot/firmware/config.txt`, or use the official 27 W power supply.
 
 ## Inspect Recent Errors
 

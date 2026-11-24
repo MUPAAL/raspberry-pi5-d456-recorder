@@ -945,36 +945,46 @@ def set_d456_emitter(depth_sensor, enabled):
 
 def start_d456():
     pipeline = rs.pipeline()
-    config = rs.config()
-    config.enable_stream(
-        rs.stream.depth,
-        RS_WIDTH,
-        RS_HEIGHT,
-        rs.format.z16,
-        D456_SOURCE_FPS,
-    )
-    config.enable_stream(
-        rs.stream.infrared,
-        1,
-        RS_WIDTH,
-        RS_HEIGHT,
-        rs.format.y8,
-        D456_SOURCE_FPS,
-    )
-    config.enable_stream(
-        rs.stream.color,
-        RS_WIDTH,
-        RS_HEIGHT,
-        rs.format.bgr8,
-        D456_SOURCE_FPS,
-    )
+    # The D435 has no 5 FPS mode; fall back to a 15 FPS stream, which the
+    # time-based clip sampler still saves at the configured save FPS.
+    for source_fps in (D456_SOURCE_FPS, 15):
+        config = rs.config()
+        config.enable_stream(
+            rs.stream.depth,
+            RS_WIDTH,
+            RS_HEIGHT,
+            rs.format.z16,
+            source_fps,
+        )
+        config.enable_stream(
+            rs.stream.infrared,
+            1,
+            RS_WIDTH,
+            RS_HEIGHT,
+            rs.format.y8,
+            source_fps,
+        )
+        config.enable_stream(
+            rs.stream.color,
+            RS_WIDTH,
+            RS_HEIGHT,
+            rs.format.bgr8,
+            source_fps,
+        )
+        try:
+            profile = pipeline.start(config)
+            break
+        except RuntimeError:
+            if source_fps == 15:
+                raise
 
-    profile = pipeline.start(config)
     device = profile.get_device()
     camera_name = device.get_info(rs.camera_info.name)
     upper_name = camera_name.upper()
     # Some librealsense/firmware combinations identify a D456 as D455.
-    valid_model = "D456" in upper_name or "D455" in upper_name
+    valid_model = any(
+        model in upper_name for model in ("D456", "D455", "D435")
+    )
     if not valid_model:
         pipeline.stop()
         raise RuntimeError(

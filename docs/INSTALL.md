@@ -51,7 +51,11 @@ chmod +x scripts/build_librealsense.sh
 
 The RSUSB backend avoids applying RealSense kernel patches to the current Raspberry Pi kernel. Compilation time depends on Raspberry Pi memory, cooling, and the value of `BUILD_JOBS`, which defaults to `2`.
 
-After installation, reconnect the D456 and verify detection:
+Run the script in an interactive terminal: the udev step pauses with `Hit any key when ready` if a camera is attached.
+
+The script also adds `usb_max_current_enable=1` to `/boot/firmware/config.txt`. Without the official 27 W (5 A) power supply, the Raspberry Pi 5 limits USB ports to 600 mA in total, which is not enough to open the camera reliably.
+
+After installation, reboot and verify detection:
 
 ```bash
 rs-enumerate-devices

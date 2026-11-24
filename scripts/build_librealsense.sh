@@ -26,7 +26,16 @@ git clone --branch "$SDK_VERSION" --depth 1 \
   https://github.com/realsenseai/librealsense.git "$SOURCE_DIR"
 
 cd "$SOURCE_DIR"
+# Prompts for a key press when a camera is attached.
 sudo ./scripts/setup_udev_rules.sh
+
+# Without the official 5 A supply, the Pi 5 limits USB to 600 mA, which is
+# not enough to open a RealSense camera reliably.
+CONFIG_TXT=/boot/firmware/config.txt
+if [[ -f "$CONFIG_TXT" ]] && ! grep -q '^usb_max_current_enable=1' "$CONFIG_TXT"; then
+  printf '\n[all]\nusb_max_current_enable=1\n' | sudo tee -a "$CONFIG_TXT" > /dev/null
+  echo "Added usb_max_current_enable=1 to $CONFIG_TXT (takes effect after reboot)."
+fi
 
 cmake -S . -B build \
   -DCMAKE_BUILD_TYPE=Release \
@@ -42,7 +51,7 @@ sudo ldconfig
 
 echo
 echo "librealsense installation finished."
-echo "Reconnect the D456, then run: rs-enumerate-devices"
+echo "Reboot, then run: rs-enumerate-devices"
 echo "Test Python outside the build directory:"
 echo "  cd ~ && python3 -c \"import pyrealsense2 as rs; print(rs.__file__)\""
 

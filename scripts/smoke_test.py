@@ -7,13 +7,20 @@ import pyrealsense2 as rs
 
 def main():
     pipeline = rs.pipeline()
-    config = rs.config()
-    config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, 5)
-    config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, 5)
-    config.enable_stream(rs.stream.infrared, 1, 848, 480, rs.format.y8, 5)
+    # The D435 has no 5 FPS mode; fall back to 15 FPS.
+    for fps in (5, 15):
+        config = rs.config()
+        config.enable_stream(rs.stream.depth, 848, 480, rs.format.z16, fps)
+        config.enable_stream(rs.stream.color, 848, 480, rs.format.bgr8, fps)
+        config.enable_stream(rs.stream.infrared, 1, 848, 480, rs.format.y8, fps)
+        try:
+            profile = pipeline.start(config)
+            break
+        except RuntimeError:
+            if fps == 15:
+                raise
 
     try:
-        profile = pipeline.start(config)
         frames = None
         for _ in range(30):
             frames = pipeline.wait_for_frames(10000)
